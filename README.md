@@ -1,4 +1,4 @@
-# grunt-requirejs-generator
+# grunt-requirejs-config
 
 > Grunt requirejs config generator
 
@@ -8,26 +8,41 @@ This plugin requires Grunt `~0.4.2`
 If you haven't used [Grunt](http://gruntjs.com/) before, be sure to check out the [Getting Started](http://gruntjs.com/getting-started) guide, as it explains how to create a [Gruntfile](http://gruntjs.com/sample-gruntfile) as well as install and use Grunt plugins. Once you're familiar with that process, you may install this plugin with this command:
 
 ```shell
-npm install grunt-requirejs-generator --save-dev
+npm install grunt-requirejs-config --save-dev
 ```
 
 Once the plugin has been installed, it may be enabled inside your Gruntfile with this line of JavaScript:
 
 ```js
-grunt.loadNpmTasks('grunt-requirejs-generator');
+grunt.loadNpmTasks('grunt-requirejs-config');
 grunt.loadNpmTasks('grunt-contrib-yuidoc');
 ```
 
 The plugin depends on YUIDoc, therefor you need to load that as well
 
-## The "requirejs_generator" task
+## Document your code correctly
+
+	/**
+	 *
+	 * @author    Martijn van Beek <martijn@blueberry.nl>
+	 * @since     16 June 2014
+	 * @namespace nl.blueberry
+	 * @class     ClassNameExtended
+	 * @extends   ClassName
+	 * @uses      jQuery
+	 */
+	 
+These comments are indexed with yuidoc and are used to determine the dependencies.
+
+
+## The "requirejs-config" task
 
 ### Overview
-In your project's Gruntfile, add a section named `requirejs_generator` to the data object passed into `grunt.initConfig()`.
+In your project's Gruntfile, add a section named `requirejs-config` to the data object passed into `grunt.initConfig()`.
 
 ```js
 grunt.initConfig({
-	'requirejs_generator':{
+	'requirejs_update':{
 		config: {
 			options: {
 				build_dir:  'build',
@@ -142,3 +157,5 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 ## Release History
 
 - 7 November 2014, version 0.0.1: check in of the task
+- 7 November 2014, version 0.0.2: small tweaks for npm publishing
+- 7 November 2014, version 0.0.3: a task cannot have a dash in it!
