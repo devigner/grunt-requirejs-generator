@@ -1,0 +1,41 @@
+{
+  "name": "grunt-requirejs-generator",
+  "description": "Grunt requirejs config generator",
+  "version": "0.0.3",
+  "homepage": "https://github.com/blueberry-media/grunt-requirejs-generator",
+  "author": {
+    "name": "Martijn van Beek",
+    "email": "martijn@blueberry.nl",
+    "url": "https://github.com/blueberry-media"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:blueberry-media/grunt-requirejs-generator.git"
+  },
+  "bugs": {
+    "url": ""
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/blueberry-media/grunt-requirejs-generator/blob/master/LICENSE-MIT"
+    }
+  ],
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+  },
+  "devDependencies": {
+	"grunt-contrib-uglify":     "~0.6.0",
+	"grunt-contrib-yuidoc":     "~0.5.0",
+	"grunt-contrib-jshint": "~0.6.0",
+	"grunt": "~0.4.2"
+  },
+  "peerDependencies": {
+    "grunt": "~0.4.2"
+  },
+  "keywords": [
+    "gruntplugin"
+  ]
+}
