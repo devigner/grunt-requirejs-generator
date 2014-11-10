@@ -118,11 +118,11 @@ module.exports = function(grunt) {
 				var name,element;
 				for ( name in shim ) {
 					element = shim[name];
-					if ( !element.hasOwnProperty('deps') || element.deps.length === 0 ) {
+					if ( ( !element.hasOwnProperty('deps') || element.deps.length === 0 ) && !shouldIgnore ( name ) ) {
 						classList.push ( name );
 					}
 				}
-				grunt.log.writeln( classList );
+				grunt.log.writeln("	> Root classes: "+classList );
 				createFilelist();
 			},
 
@@ -211,15 +211,21 @@ module.exports = function(grunt) {
 		}
 
 		// Read the require config for third party files
-		if ( options.hasOwnProperty("thirdParty") ) {
-			if ( options.thirdParty.hasOwnProperty("shim") ) {
-				shim = options.thirdParty.shim;
+		if ( options.hasOwnProperty("config") ) {
+			if ( options.config.hasOwnProperty("shim") ) {
+				shim = options.config.shim;
+			}else{
+				grunt.log.writeln("	>> Shim not defined");
 			}
-			if ( options.thirdParty.hasOwnProperty("paths") ) {
-				paths = options.thirdParty.paths;
+			if ( options.config.hasOwnProperty("paths") ) {
+				paths = options.config.paths;
+			}else{
+				grunt.log.writeln("	>> Paths not defined");
 			}
-			if ( options.thirdParty.hasOwnProperty("amd") ) {
-				amd = options.thirdParty.amd;
+			if ( options.config.hasOwnProperty("amd") ) {
+				amd = options.config.amd;
+			}else{
+				grunt.log.writeln("	>> AMD not defined");
 			}
 		}else{
 			grunt.log.writeln("No third party setup found");
@@ -278,6 +284,8 @@ module.exports = function(grunt) {
 						}
 					}
 				}
+			}else{
+				grunt.log.writeln("	> ignored: "+className );
 			}
 		};
 
