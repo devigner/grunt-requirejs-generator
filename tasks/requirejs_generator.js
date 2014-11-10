@@ -322,7 +322,7 @@ module.exports = function(grunt) {
 		if ( options.hasOwnProperty('debug') ) {
 			app.push("	var nextFile = function( c ){");
 			app.push("		if ( c < classes.length ) {");
-			app.push("			grunt.log.writeln( c , classes.length , classes[c] ); ");
+			app.push("			consiole.log( c , classes.length , classes[c] ); ");
 			app.push("			require([classes[c]],function(){");
 			//app.push("				$(document).trigger('class-loaded',classes[c]);");
 			app.push("				nextFile( ++ c );");
@@ -331,7 +331,7 @@ module.exports = function(grunt) {
 			//if ( options.hasOwnProperty('ready') ) {
 			//	app.push("			".options.ready);
 			//}else{
-				app.push("			$(document).trigger('app-ready');");
+			app.push("			$(document).trigger('app-ready');");
 			//}
 			app.push("		}");
 			app.push("	}");
@@ -341,7 +341,7 @@ module.exports = function(grunt) {
 			//if ( options.hasOwnProperty('ready') ) {
 			//	app.push("		".options.ready);
 			//}else{
-				app.push("		$(document).trigger('app-ready');");
+			app.push("		$(document).trigger('app-ready');");
 			//}
 			app.push("	});");
 		}
