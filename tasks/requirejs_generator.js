@@ -322,7 +322,7 @@ module.exports = function(grunt) {
 		if ( options.hasOwnProperty('debug') ) {
 			app.push("	var nextFile = function( c ){");
 			app.push("		if ( c < classes.length ) {");
-			app.push("			consiole.log( c , classes.length , classes[c] ); ");
+			app.push("			console.log( c , classes.length , classes[c] ); ");
 			app.push("			require([classes[c]],function(){");
 			//app.push("				$(document).trigger('class-loaded',classes[c]);");
 			app.push("				nextFile( ++ c );");
