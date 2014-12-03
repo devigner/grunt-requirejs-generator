@@ -1,7 +1,7 @@
 {
   "name": "grunt-requirejs-generator",
   "description": "Grunt requirejs config generator",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "homepage": "https://github.com/blueberry-media/grunt-requirejs-generator",
   "author": {
     "name": "Martijn van Beek",
