@@ -18,8 +18,10 @@ module.exports = function(grunt) {
 	grunt.registerMultiTask('requirejs_generator', 'Grunt requirejs config generator', function() {
 
 		var
+			starttime       = Date.now(),
 			date            = new Date(),
 			watch           = ['extends','uses'],
+			clean,
 			ignoreForMinify = [],
 			paths           = {},
 			shim            = {},
@@ -27,6 +29,12 @@ module.exports = function(grunt) {
 			lookup          = {},
 			minifyList      = [],
 			amd             = [],
+			report = {
+				unresolved :[],
+				ignored : [],
+				minify : []
+			},
+
 			totalFiles      = 0,
 			jshint,
 			app,
@@ -48,7 +56,7 @@ module.exports = function(grunt) {
 			json_classes,
 			json_amd,
 			json_files,
-			
+
 
 			// Merge task-specific and/or target-specific options with these defaults.
 			options = this.options({
@@ -62,8 +70,8 @@ module.exports = function(grunt) {
 			 * @param  {String} content
 			 */
 			writeFile = function( file , content ){
-				grunt.log.writeln("File written", file );
 				fs.writeFileSync( file , content );
+				grunt.log.writeln("File written", file.magenta );
 			},
 
 			/**
@@ -122,7 +130,7 @@ module.exports = function(grunt) {
 						classList.push ( name );
 					}
 				}
-				grunt.log.writeln("	> Root classes: "+classList );
+				//grunt.log.writeln("	> Root classes: "+classList );
 				createFilelist();
 			},
 
@@ -151,7 +159,7 @@ module.exports = function(grunt) {
 								}
 							}
 							if (validated === match) {
-								grunt.log.writeln("Added", name);
+							//	grunt.log.writeln("Added", name);
 								classList.push(name);
 								createFilelist();
 								return;
@@ -240,7 +248,7 @@ module.exports = function(grunt) {
 			paths[ formatClassName(cl.name) ] = cl.file;
 			name  = cl.name.replace(/\./g,"\/");
 			lookup[name] = formatFileName( file );
-			totalFiles++;
+
 		}
 
 		for ( name in classes ) {
@@ -260,32 +268,37 @@ module.exports = function(grunt) {
 						for (q = 0; q < list.length; q++) {
 							sub = list[q];
 
+							// Remove brackets
+							clean = sub.replace("{", "").replace("}", "");
 
-							ext = formatClassName(sub.replace("{", "").replace("}", ""));
+							// Remove namespace
+							ext  = formatClassName(clean);
+
+							// Check if file is found
+							if (paths.hasOwnProperty(ext)) {
+								if (!shim.hasOwnProperty(cl.name)) {
+									shim[className] = [];
+								}
+
+								if (!de.hasOwnProperty('deps')) {
+									de.deps = [];
+								}
+								de.deps.push(ext);
+								if (!shim.hasOwnProperty(ext)) {
+									shim[ext] = [];
+								}
 
 
-							if (!shim.hasOwnProperty(className)) {
-								shim[className] = [];
+								shim[className] = de;
+							}else{
+								report.unresolved.push ( ext );
 							}
 
-							if (lookup.hasOwnProperty(ext)) {
-								ext = lookup[ext];
-							}
-							if (!de.hasOwnProperty('deps')) {
-								de.deps = [];
-							}
-							de.deps.push(ext);
-							if (!shim.hasOwnProperty(ext)) {
-								shim[ext] = [];
-							}
-
-
-							shim[className] = de;
 						}
 					}
 				}
 			}else{
-				grunt.log.writeln("	> ignored: "+className );
+				report.ignored.push ( className );
 			}
 		};
 
@@ -300,14 +313,24 @@ module.exports = function(grunt) {
 					if ( ignoreForMinify.indexOf( name ) === -1 ) {
 						minifyList.push(paths[name]);
 					}else{
-						grunt.log.writeln("Ignored file for minify: " + name );
+						report.minify.push ( name );
 					}
+					totalFiles++;
 					exportPaths[name] = removeExtension(file);
 				}
 			}
 		}
 
-		grunt.log.writeln("Total files list: ", totalFiles , classList.length );
+		for ( name in report ) {
+			if (report[name].length > 0) {
+				grunt.log.writeln("	> "+name+":");
+				for (i = 0; i < report[name].length; i++) {
+					grunt.log.writeln("		- " + (report[name][i]).red);
+				}
+			}
+		}
+
+		grunt.log.writeln("Total files list: "+ (totalFiles.toString()).cyan+" of "+(classList.length.toString()).cyan );
 
 		conf = {
 			paths: exportPaths,
@@ -379,7 +402,9 @@ module.exports = function(grunt) {
 		//}else{
 		//	grunt.log.writeln("No jshint support found");
 		}
-	 	//grunt.log.writeln("DONE");
+		var endtime = Date.now();
+		var time = ( ((endtime - starttime) / 1000).toString() ).green;
+		grunt.log.writeln('Requirejs generator compile completed in ' + time + ' seconds');
 	});
 
 };
