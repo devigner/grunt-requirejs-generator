@@ -95,9 +95,9 @@ module.exports = function(grunt) {
 				if ( options.hasOwnProperty('replace') && options.replace.hasOwnProperty('that') && options.replace.hasOwnProperty('with') ) {
 					path = path.replace( options.replace.that , options.replace.with );
 				}
-				if ( options.hasOwnProperty('replace') && options.replace.hasOwnProperty('prefix') ) {
+				/*if ( options.hasOwnProperty('replace') && options.replace.hasOwnProperty('prefix') ) {
 					path = options.replace.prefix+path;
-				}
+				}*/
 				return path;
 			},
 
@@ -353,9 +353,9 @@ module.exports = function(grunt) {
 		if ( options.hasOwnProperty('debug') ) {
 			app.push("	var nextFile = function( c ){");
 			app.push("		if ( c < classes.length ) {");
-			app.push("			console.log( c , classes.length , classes[c] ); ");
+			//app.push("			console.log( c , classes.length , classes[c] ); ");
 			app.push("			require([classes[c]],function(){");
-			//app.push("				$(document).trigger('class-loaded',classes[c]);");
+			app.push("				$(document).trigger('class-loaded',[c,classes]);");
 			app.push("				nextFile( ++ c );");
 			app.push("			});");
 			app.push("		}else{");
