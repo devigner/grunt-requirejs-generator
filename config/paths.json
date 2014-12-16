@@ -1,0 +1,28 @@
+{
+  "paths": {
+    "jQuery"                : "//code.jquery.com/jquery-2.1.1.js" ,
+    "Class"                 : "html/assets/bower/classy/classy.js" ,
+    "raphael"               : "html/assets/bower/raphael/raphael.js" ,
+    "Bootstrap"             : "html/assets/bower/bootstrap-sass/dist/js/bootstrap.js",
+    "Handlebars"            : "/app-assets/editor/bower/handlebars/handlebars.js"
+  },
+  "shim" : {
+    "jQuery":{},
+    "Class":{},
+    "raphael": {
+      "deps": [
+        "jQuery"
+      ]
+    },
+    "Handlebars": {
+      "deps": [
+        "jQuery"
+      ],
+      "exports":"Handlebars"
+    }
+  },
+  "amd": [
+    "raphael",
+    "Handlebars"
+  ]
+}

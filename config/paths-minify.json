@@ -1,0 +1,25 @@
+{
+  "paths": {
+    "jQuery"                : "//code.jquery.com/jquery-2.1.1.js" ,
+    "Handlebars"            : "/app-assets/editor/bower/handlebars/handlebars.js",
+    "App"                   : ""
+  },
+  "shim" : {
+    "jQuery":{},
+    "Handlebars": {
+      "deps": [
+        "jQuery"
+      ],
+      "exports":"Handlebars"
+    },
+    "App": {
+      "deps": [
+        "jQuery",
+        "Handlebars"
+      ]
+    }
+  },
+  "amd": [
+    "Handlebars"
+  ]
+}

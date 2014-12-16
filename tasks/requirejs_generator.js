@@ -22,12 +22,10 @@ module.exports = function(grunt) {
 			date            = new Date(),
 			watch           = ['extends','uses'],
 			clean,
-			ignoreForMinify = [],
 			paths           = {},
 			shim            = {},
 			classList       = [],
 			lookup          = {},
-			minifyList      = [],
 			amd             = [],
 			report = {
 				unresolved :[],
@@ -52,6 +50,7 @@ module.exports = function(grunt) {
 			data,
 			classes,
 			conf,
+
 			json_conf,
 			json_classes,
 			json_amd,
@@ -188,6 +187,40 @@ module.exports = function(grunt) {
 				var s = file.split(".");
 				s.splice( -1 );
 				return s.join(".");
+			},
+
+			/**
+			 *
+			 */
+			createRequireSetup = function( debug ){
+				var app = [];
+				app.push("/*! Generated with grunt-requirejs-generator @ "+date+" */\n\n");
+				app.push("var classes = "+json_classes+";");
+				app.push("requirejs.config("+json_conf+" );");
+				if ( amd.length > 0 ) {
+					app.push("define( " + json_amd + " , function( " + ( amd.join(",") ) + " ) {");
+				}
+				if ( debug ) {
+					app.push("	var nextFile = function( c ){");
+					app.push("		if ( c < classes.length ) {");
+					app.push("			require([classes[c]],function(){");
+					app.push("				$(document).trigger('class-loaded',[c,classes]);");
+					app.push("				nextFile( ++ c );");
+					app.push("			});");
+					app.push("		}else{");
+					app.push("			$(document).trigger('app-ready');");
+					app.push("		}");
+					app.push("	}");
+					app.push("	nextFile(0);");
+				}else{
+					app.push("	require(classes,function(){");
+					app.push("		$(document).trigger('app-ready');");
+					app.push("	});");
+				}
+				if ( amd.length > 0 ) {
+					app.push("});");
+				}
+				return app.join("\n");
 			}
 		;
 
@@ -213,10 +246,7 @@ module.exports = function(grunt) {
 			options.ignore = [];
 		}
 
-		// Check if ignore is set, if not set it
-		if ( options.hasOwnProperty("ignoreForMinify") ) {
-			ignoreForMinify = options.ignoreForMinify;
-		}
+
 
 		// Read the require config for third party files
 		if ( options.hasOwnProperty("config") ) {
@@ -304,89 +334,137 @@ module.exports = function(grunt) {
 
 		createStartFileList ();
 
+		// On purpose this loop does not collect files for the minified version
 		var exportPaths = {};
 		for ( i = 0 ; i < classList.length ; i ++ ) {
 			for (name in paths) {
 				if ( name === classList[i] ) {
 					file = formatFileName(paths[name]);
-
-					if ( ignoreForMinify.indexOf( name ) === -1 ) {
-						minifyList.push(paths[name]);
-					}else{
-						report.minify.push ( name );
-					}
 					totalFiles++;
 					exportPaths[name] = removeExtension(file);
 				}
 			}
 		}
 
-		for ( name in report ) {
-			if (report[name].length > 0) {
-				grunt.log.writeln("	> "+name+":");
-				for (i = 0; i < report[name].length; i++) {
-					grunt.log.writeln("		- " + (report[name][i]).red);
-				}
-			}
-		}
-
-		grunt.log.writeln("Total files list: "+ (totalFiles.toString()).cyan+" of "+(classList.length.toString()).cyan );
-
 		conf = {
 			paths: exportPaths,
 			shim:  shim
 		};
 
+		json_conf         = JSON.stringify( conf   , null, '\t');
+		json_classes      = JSON.stringify( classList  , null, '\t');
+		json_amd          = JSON.stringify( amd    , null, '\t');
 
-
-		json_conf    = JSON.stringify( conf   , null, '\t');
-		json_classes = JSON.stringify( classList  , null, '\t');
-		json_amd     = JSON.stringify( amd    , null, '\t');
-
-
-
-		app = [];
-		app.push("/* Generated with grunt-requirejs-generator @ "+date+" */");
-		app.push("var classes = "+json_classes+";");
-		app.push("requirejs.config("+json_conf+" );");
-		app.push("define( "+json_amd+" , function( "+( amd.join(",") )+" ) {" );
-		if ( options.hasOwnProperty('debug') ) {
-			app.push("	var nextFile = function( c ){");
-			app.push("		if ( c < classes.length ) {");
-			//app.push("			console.log( c , classes.length , classes[c] ); ");
-			app.push("			require([classes[c]],function(){");
-			app.push("				$(document).trigger('class-loaded',[c,classes]);");
-			app.push("				nextFile( ++ c );");
-			app.push("			});");
-			app.push("		}else{");
-			//if ( options.hasOwnProperty('ready') ) {
-			//	app.push("			".options.ready);
-			//}else{
-			app.push("			$(document).trigger('app-ready');");
-			//}
-			app.push("		}");
-			app.push("	}");
-			app.push("	nextFile(0);");
-		}else{
-			app.push("	require(classes,function(){");
-			//if ( options.hasOwnProperty('ready') ) {
-			//	app.push("		".options.ready);
-			//}else{
-			app.push("		$(document).trigger('app-ready');");
-			//}
-			app.push("	});");
-		}
-		app.push("});");
-
-
-
-		json_files   = JSON.stringify( minifyList ,null, '\t' );
-
-		writeFile( options.output , app.join("\n") );
+		writeFile( options.output , createRequireSetup( options.hasOwnProperty('debug') ) );
 		writeFile( options.build_dir + "/shim.json",         json_conf );
 		writeFile( options.build_dir + "/amd.json",          json_amd );
-		writeFile( options.build_dir + "/files.json",        json_files );
 		writeFile( options.build_dir + "/classes.json",      json_classes );
+
+
+		if ( options.hasOwnProperty("minify") ) {
+
+
+			/**
+			 * MINIFIED VERSION
+			 */
+
+
+			var minify = {
+				ignore: [],
+				list: []
+			};
+
+
+
+
+			// Check if ignore is set, if not set it
+			if (options.minify.hasOwnProperty("ignore")) {
+				minify.ignore = options.minify.ignore;
+			}
+
+			var s;
+			for (i = 0; i < classList.length; i++) {
+				for (name in paths) {
+					if (name === classList[i]) {
+						file = formatFileName(paths[name]);
+
+						// Check if file entry starts with slash, if so it is an external loaded file
+						if (paths[name].indexOf("/") > 0) {
+							if (minify.ignore.indexOf(name) === -1) {
+								minify.list.push(paths[name]);
+							} else {
+								report.minify.push(name);
+							}
+						//}else{
+						//	grunt.log.writeln("Full path file: "+paths[name]);
+						}
+					}
+				}
+			}
+
+			json_files   = JSON.stringify( minify.list ,null, '\t' );
+			writeFile( options.build_dir + "/files.json", json_files );
+
+
+			// Read the require config for third party files
+			if ( options.minify.hasOwnProperty("config") ) {
+				if ( options.minify.config.hasOwnProperty("shim") ) {
+					shim = options.minify.config.shim;
+				}else{
+					grunt.log.writeln("	>> Shim not defined");
+				}
+				if ( options.minify.config.hasOwnProperty("paths") ) {
+					paths = options.minify.config.paths;
+				}else{
+					grunt.log.writeln("	>> Paths not defined");
+				}
+				if ( options.minify.config.hasOwnProperty("amd") ) {
+					amd = options.minify.config.amd;
+				}else{
+					grunt.log.writeln("	>> AMD not defined");
+				}
+			}else{
+				grunt.log.writeln("No third party setup found");
+			}
+
+			if (options.minify.hasOwnProperty('app')) {
+				paths.App = options.minify.app;
+			}else{
+				grunt.log.writeln("No minified app found");
+			}
+
+			json_amd          = JSON.stringify( amd    , null, '\t');
+
+			for ( name in paths ) {
+				if (paths[name].indexOf("/") > 0 ) {
+					paths[name] = formatFileName( paths[name] );
+				}
+			}
+
+			minify.conf = {
+				paths: paths,
+				shim : shim
+			};
+
+
+			for ( name in minify.conf.paths ) {
+				minify.conf.paths[name] = removeExtension( minify.conf.paths[name] );
+			}
+
+
+			if (options.minify.hasOwnProperty('output')) {
+
+				json_classes = Object.keys( minify.conf.paths ).map(function(k){return k});
+				json_classes = JSON.stringify(json_classes, null, '\t');
+				json_conf    = JSON.stringify(minify.conf, null, '\t');
+
+				writeFile(options.minify.output, createRequireSetup( options.minify.hasOwnProperty('debug') ) );
+			}else{
+				grunt.log.writeln("No minified require setup written");
+			}
+		}else{
+			grunt.log.writeln("No minified setup found");
+		}
 
 
 
@@ -399,9 +477,21 @@ module.exports = function(grunt) {
 			}
 			jshint.predef = classList;
 			writeFile('.jshintrc', JSON.stringify( jshint , null, '\t') );
-		//}else{
-		//	grunt.log.writeln("No jshint support found");
 		}
+
+
+		for ( name in report ) {
+			if (report[name].length > 0) {
+				grunt.log.writeln("	> "+name+":");
+				for (i = 0; i < report[name].length; i++) {
+					grunt.log.writeln("		- " + (report[name][i]).red);
+				}
+			}
+		}
+
+		grunt.log.writeln("Total files list: "+ (totalFiles.toString()).cyan+" of "+(classList.length.toString()).cyan );
+
+
 		var endtime = Date.now();
 		var time = ( ((endtime - starttime) / 1000).toString() ).green;
 		grunt.log.writeln('Requirejs generator compile completed in ' + time + ' seconds');

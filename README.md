@@ -42,30 +42,35 @@ In your project's Gruntfile, add a section named `requirejs-config` to the data 
 
 ```js
 grunt.initConfig({
-	'requirejs_update':{
-		config: {
-			options: {
-				build_dir:  'build',
-				yuidoc_dir: 'build/apidocs',
-				output: 'assets/js/source/App.js',
-				replace:{
-					prefix: '',
-					that:'',
-					with:''
-				},
-				thirdParty:paths,
-				ignore:[
-					"StandaloneMediaManager"
-				],
-				jshint:[
-					'requirejs',
-					'require',
-					'requestAnimationFrame',
-					'CKEDITOR',
-					"Mousetrap"
-				]
-			}
+	// Configuration to be run (and then tested).
+	requirejs_generator:{
+	  config: {
+		options: {
+		  yuidoc_dir:'build/apidocs',
+		  build_dir: 'build',
+		  debug:     true,
+		  config:    grunt.file.readJSON("config/paths.json"),
+		  output:    'html/assets/js/source/<%= pkg.main %>.js',
+		  replace:{
+			that:'html/assets/',
+			with:'/assets/editor/'
+		  },
+		  ignore:[
+	
+		  ],
+		  jshint:[
+	
+		  ],
+		  minify:{
+			config:  grunt.file.readJSON("config/paths-minify.json"),
+			output: 'html/assets/js/min/<%= pkg.main %>.js',
+			app:    'html/assets/js/min/App-<%= pkg.main %>.js',
+			ignore:[
+			  "Handlebars"
+			]
+		  }
 		}
+	  }
 	}
 });
 ```
@@ -113,7 +118,7 @@ Default value: ``
 
 A string to put in place
 
-#### options.thirdParty
+#### options.config
 Type: `Object`
 Default value: `{}`
 
@@ -159,3 +164,4 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 - 7 November 2014, version 0.0.1: check in of the task
 - 7 November 2014, version 0.0.2: small tweaks for npm publishing
 - 7 November 2014, version 0.0.3: a task cannot have a dash in it!
+- 16 December 2014, version 0.0.7: Added special export for minified version

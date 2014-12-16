@@ -12,58 +12,37 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
-    jshint: {
-      all: [
-        'Gruntfile.js',
-        'tasks/*.js',
-        '<%= nodeunit.tests %>',
-      ],
-      options: {
-        jshintrc: '.jshintrc',
-      },
-    },
-
-    // Before generating any new files, remove any previously-created files.
-    clean: {
-      tests: ['tmp'],
-    },
 
     // Configuration to be run (and then tested).
-    'requirejs_generator':{
+    requirejs_generator:{
       config: {
         options: {
           yuidoc_dir:'build/apidocs',
           build_dir: 'build',
-          output: 'assets/js/source/App.js',
+          debug:     true,
+          config:    grunt.file.readJSON("config/paths.json"),
+          output:    'html/assets/js/source/<%= pkg.main %>.js',
           replace:{
-            prefix: '/',
-            that:'assets/',
-            with:'app-assets/editor/'
+            that:'html/assets/',
+            with:'/assets/editor/'
           },
-          thirdParty: grunt.file.readJSON("js-config/paths.json"),
-        //  ready: "$(document).trigger('app-ready');",
           ignore:[
-            "StandaloneMediaManager"
-          ],
-          ignoreForMinify:[
-            "Plexer"
+
           ],
           jshint:[
-            'requirejs',
-            'require',
-            'requestAnimationFrame',
-            'CKEDITOR',
-            "Mousetrap"
-          ]
+
+          ],
+          minify:{
+            config:  grunt.file.readJSON("config/paths-minify.json"),
+            output: 'html/assets/js/min/<%= pkg.main %>.js',
+            app:    'html/assets/js/min/App-<%= pkg.main %>.js',
+            ignore:[
+              "Handlebars"
+            ]
+          }
         }
       }
-    },
-
-    // Unit tests.
-    nodeunit: {
-      tests: ['test/*_test.js'],
-    },
-
+    }
   });
 
   // Actually load this plugin's task(s).
