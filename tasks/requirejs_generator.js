@@ -20,7 +20,7 @@ module.exports = function(grunt) {
 		var
 			starttime       = Date.now(),
 			date            = new Date(),
-			watch           = ['extends','uses'],
+			watch           = ['extends','requires'],
 			clean,
 			paths           = {},
 			shim            = {},
@@ -50,7 +50,6 @@ module.exports = function(grunt) {
 			data,
 			classes,
 			conf,
-
 			json_conf,
 			json_classes,
 			json_amd,
@@ -192,37 +191,56 @@ module.exports = function(grunt) {
 			/**
 			 *
 			 */
-			createRequireSetup = function( debug ){
-				var app = [];
-				app.push("/*! Generated with grunt-requirejs-generator @ "+date+" */\n\n");
-				app.push("var classes = "+json_classes+";");
-				app.push("requirejs.config("+json_conf+" );");
-				if ( amd.length > 0 ) {
-					app.push("define( " + json_amd + " , function( " + ( amd.join(",") ) + " ) {");
-				}
-				if ( debug ) {
-					app.push("	var nextFile = function( c ){");
-					app.push("		if ( c < classes.length ) {");
-					app.push("			require([classes[c]],function(){");
-					app.push("				$(document).trigger('class-loaded',[c,classes]);");
-					app.push("				nextFile( ++ c );");
-					app.push("			});");
-					app.push("		}else{");
-					app.push("			$(document).trigger('app-ready');");
-					app.push("		}");
-					app.push("	}");
-					app.push("	nextFile(0);");
-				}else{
-					app.push("	require(classes,function(){");
-					app.push("		$(document).trigger('app-ready');");
-					app.push("	});");
-				}
-				if ( amd.length > 0 ) {
+			createRequireSetup = function(){
+				var app = []
+					app.push("/*! Generated with grunt-requirejs-generator @ "+date+" */\n\n");
+					app.push("define('"+options.main+"',function(){");
+					app.push("	requirejs.config( "+json_conf+" );");
 					app.push("});");
-				}
 				return app.join("\n");
-			}
+			},
+
+			/**
+			 * Create a UML diagram based upon the http://jumly.tmtk.net/ api
+			 *
+			 * @method createUMLDependencies
+			 * @param  {String} target
+			 * @param  {Number} depth
+			 * @param  {Boolean} write
+			 */
+			createUMLDependencies = function ( target , depth , write ) {
+				var name, i,d = false;
+
+
+
+				if ( write ) {
+					uml += '\t'.repeat(depth) + '@message "requires", "' + target + '.js"';
+					depth++;
+				}
+				for ( name in shim ) {
+					if ( name === target ) {
+						if ( shim[name].hasOwnProperty("deps") && shim[name].deps.length > 0 ) {
+							for ( i = 0 ; i < shim[name].deps.length ; i ++ ) {
+								if ( !d && write ) {
+									uml += ", ->\n";
+								}
+								d = true;
+								createUMLDependencies( shim[name].deps[i] , depth , true );
+							}
+						}
+					}
+				}
+				classList.push ( target );
+				if ( !d && write ) {
+					uml += "\n";
+				}
+			},
+			uml = ''
 		;
+
+		String.prototype.repeat = function( num ) {
+			return new Array( num + 1 ).join( this );
+		};
 
 		if ( !options.hasOwnProperty('build_dir')) {
 			options.build_dir = "build";
@@ -251,23 +269,29 @@ module.exports = function(grunt) {
 		// Read the require config for third party files
 		if ( options.hasOwnProperty("config") ) {
 			if ( options.config.hasOwnProperty("shim") ) {
-				shim = options.config.shim;
+				//shim = options.config.shim;
 			}else{
 				grunt.log.writeln("	>> Shim not defined");
 			}
 			if ( options.config.hasOwnProperty("paths") ) {
-				paths = options.config.paths;
+				paths = [];
+				for (name in options.config.paths) {
+					paths[name] = options.config.paths[name];
+				}
 			}else{
 				grunt.log.writeln("	>> Paths not defined");
 			}
-			if ( options.config.hasOwnProperty("amd") ) {
+			/*if ( options.config.hasOwnProperty("amd") ) {
 				amd = options.config.amd;
 			}else{
 				grunt.log.writeln("	>> AMD not defined");
-			}
+			}*/
 		}else{
 			grunt.log.writeln("No third party setup found");
 		}
+
+
+
 
 		data    = readFile(options.yuidoc_dir + '/data.json');
 		classes = data.classes;
@@ -278,13 +302,21 @@ module.exports = function(grunt) {
 			paths[ formatClassName(cl.name) ] = cl.file;
 			name  = cl.name.replace(/\./g,"\/");
 			lookup[name] = formatFileName( file );
-
 		}
+
+		// Copy all names to classList
+		for (name in paths) {
+			classList.push( name );
+		}
+
+
 
 		for ( name in classes ) {
 			cl    = classes[name];
 			de    = {};
 			className = formatClassName(cl.name);
+
+			classList.push( className );
 
 			if ( !shouldIgnore ( className ) ) {
 
@@ -307,18 +339,15 @@ module.exports = function(grunt) {
 							// Check if file is found
 							if (paths.hasOwnProperty(ext)) {
 								if (!shim.hasOwnProperty(cl.name)) {
-									shim[className] = [];
+									shim[className] = {};
 								}
-
 								if (!de.hasOwnProperty('deps')) {
 									de.deps = [];
 								}
 								de.deps.push(ext);
 								if (!shim.hasOwnProperty(ext)) {
-									shim[ext] = [];
+									shim[ext] = {};
 								}
-
-
 								shim[className] = de;
 							}else{
 								report.unresolved.push ( ext );
@@ -332,18 +361,50 @@ module.exports = function(grunt) {
 			}
 		};
 
+		writeFile( options.build_dir + "/shim.json", JSON.stringify( shim   , null, '\t') );
+
+		// If application is defined a uml diagram is generated and the classList is filled with all classes used
+		var application = '';
+		if ( options.hasOwnProperty("application") ) {
+			application = options.application;
+			uml = '@found "'+application+'.js", ->\n';
+	//	}
+
+	//	if ( application !== '' ) {
+			classList = [];
+			for (name in options.config.paths) {
+				classList.push( name );
+			}
+			createUMLDependencies(application,1, false );
+			writeFile( options.build_dir + "/uml.jumly", uml );
+		}
+
+
+
 		createStartFileList ();
+
+		if ( options.hasOwnProperty("config") ) {
+			if (options.config.hasOwnProperty("shim")) {
+				shim = options.config.shim;
+			}
+		}
+
+		var temp = {};
+		for ( i = 0 ; i < classList.length ; i ++ ) {
+			temp[classList[i]] = 1;
+		}
+		classList = [];
+		for ( name in temp ) {
+			classList.push( name );
+		}
 
 		// On purpose this loop does not collect files for the minified version
 		var exportPaths = {};
 		for ( i = 0 ; i < classList.length ; i ++ ) {
-			for (name in paths) {
-				if ( name === classList[i] ) {
-					file = formatFileName(paths[name]);
-					totalFiles++;
-					exportPaths[name] = removeExtension(file);
-				}
-			}
+			name = classList[i];
+			file = formatFileName(paths[name]);
+			totalFiles++;
+			exportPaths[name] = removeExtension(file);
 		}
 
 		conf = {
@@ -351,13 +412,14 @@ module.exports = function(grunt) {
 			shim:  shim
 		};
 
-		json_conf         = JSON.stringify( conf   , null, '\t');
+
+		json_conf         = JSON.stringify( conf  ,      null, '\t');
 		json_classes      = JSON.stringify( classList  , null, '\t');
-		json_amd          = JSON.stringify( amd    , null, '\t');
+//		json_amd          = JSON.stringify( amd    ,     null, '\t');
 
 		writeFile( options.output , createRequireSetup( options.hasOwnProperty('debug') ) );
-		writeFile( options.build_dir + "/shim.json",         json_conf );
-		writeFile( options.build_dir + "/amd.json",          json_amd );
+
+//		writeFile( options.build_dir + "/amd.json",          json_amd );
 		writeFile( options.build_dir + "/classes.json",      json_classes );
 
 
@@ -382,28 +444,26 @@ module.exports = function(grunt) {
 				minify.ignore = options.minify.ignore;
 			}
 
-			var s;
 			for (i = 0; i < classList.length; i++) {
 				for (name in paths) {
 					if (name === classList[i]) {
 						file = formatFileName(paths[name]);
 
+					//	grunt.log.writeln('File: '+paths[name]);
+
 						// Check if file entry starts with slash, if so it is an external loaded file
 						if (paths[name].indexOf("/") > 0) {
 							if (minify.ignore.indexOf(name) === -1) {
-								minify.list.push(paths[name]);
+								minify.list.push( {name:name,path:paths[name]});
 							} else {
 								report.minify.push(name);
 							}
-						//}else{
-						//	grunt.log.writeln("Full path file: "+paths[name]);
 						}
 					}
 				}
 			}
 
-			json_files   = JSON.stringify( minify.list ,null, '\t' );
-			writeFile( options.build_dir + "/files.json", json_files );
+
 
 
 			// Read the require config for third party files
@@ -418,28 +478,77 @@ module.exports = function(grunt) {
 				}else{
 					grunt.log.writeln("	>> Paths not defined");
 				}
-				if ( options.minify.config.hasOwnProperty("amd") ) {
+/*				if ( options.minify.config.hasOwnProperty("amd") ) {
 					amd = options.minify.config.amd;
 				}else{
 					grunt.log.writeln("	>> AMD not defined");
-				}
+				}*/
 			}else{
 				grunt.log.writeln("No third party setup found");
 			}
 
+
+
+		//	json_amd          = JSON.stringify( amd    , null, '\t');
+
+			var d = [], e = [];
+			for ( name in paths ) {
+
+
+				if ( paths[name].indexOf("/") === 0 ) {
+					d.push('"' + name + '"');
+					e.push(name);
+				}
+
+				if (paths[name].indexOf("/") > 0) {
+					//paths[name] = formatFileName(paths[name]);
+					delete paths[name];
+			//	}else{
+
+				}
+				//}
+			}
+
 			if (options.minify.hasOwnProperty('app')) {
-				paths.App = options.minify.app;
+				paths.App = formatFileName ( options.minify.app );
 			}else{
 				grunt.log.writeln("No minified app found");
 			}
 
-			json_amd          = JSON.stringify( amd    , null, '\t');
+			grunt.log.writeln("Create app");
 
-			for ( name in paths ) {
-				if (paths[name].indexOf("/") > 0 ) {
-					paths[name] = formatFileName( paths[name] );
-				}
+			var c = '';
+			var app  = '';
+			app += 'define("App", ['+ d.join(', ') +'],function( '+ e.join(',') +' ){\n';
+			app += "/* \n";
+			for ( i = 0 ; i < minify.list.length ; i++ ) {
+				app += "\t - "+minify.list[i].path+"\n";
 			}
+			app += "*/\n";
+			for ( i = 0 ; i < minify.list.length ; i++ ) {
+				name =  minify.list[i].name;
+				c = fs.readFileSync( minify.list[i].path ,{encoding:"utf8"});
+
+
+				//app += 'console.log( "' + name + '" ); \n';
+
+				/*var d = shim.hasOwnProperty(name) && shim[name].hasOwnProperty('exports');
+				if ( d ) {
+					app += 'define( "' + name + '", function(){\n';
+				}*/
+				app += c+"\n";
+				/*if ( d ) {
+					app += '});\n';
+					delete shim[name];
+				}*/
+			}
+			app += '});\n';
+
+
+			grunt.log.writeln("App created");
+
+			//json_files   = JSON.stringify( minify.list ,null, '\t' );
+			writeFile( options.minify.app , app );
 
 			minify.conf = {
 				paths: paths,
