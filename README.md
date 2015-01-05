@@ -165,3 +165,4 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 - 7 November 2014, version 0.0.2: small tweaks for npm publishing
 - 7 November 2014, version 0.0.3: a task cannot have a dash in it!
 - 16 December 2014, version 0.0.7: Added special export for minified version
+- 5 January 2015, version 0.0.9: Fully AMD support (testing)
