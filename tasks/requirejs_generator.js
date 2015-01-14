@@ -68,8 +68,8 @@ module.exports = function(grunt) {
 			 * @param  {String} content
 			 */
 			writeFile = function( file , content ){
-				fs.writeFileSync( file , content );
 				grunt.log.writeln("File written", file.magenta );
+				fs.writeFileSync( file , content );
 			},
 
 			/**
@@ -79,6 +79,21 @@ module.exports = function(grunt) {
 			 */
 			readFile = function( file ){
 				return JSON.parse( fs.readFileSync( file ,{encoding:"utf8"}) );
+			},
+
+			/**
+			 * @method  copyFile
+			 * @param   {String} file
+			 * @param   {String} destination
+			 * @returns {String} string
+			 */
+			copyFile = function( file , destination ){
+				if ( fs.existsSync( file ) ) {
+					grunt.log.writeln("File copied", file.magenta, " -> ", destination.cyan);
+					fs.writeFileSync( destination , fs.readFileSync( file ) );
+				}else{
+					grunt.log.writeln("File copied failed", file.magenta, " -> ", destination.cyan);
+				}
 			},
 
 			/**
@@ -209,12 +224,16 @@ module.exports = function(grunt) {
 			 * @param  {Boolean} write
 			 */
 			createUMLDependencies = function ( target , depth , write ) {
-				var name, i,d = false;
+				var name, i,d = false,tabs;
+
+
 
 
 
 				if ( write ) {
-					uml += '\t'.repeat(depth) + '@message "requires", "' + target + '.js"';
+					tabs = '\t'.repeat(depth);
+					//grunt.log.writeln("Target", tabs+target );
+					uml += tabs + '@message "requires", "' + target + '.js"';
 					depth++;
 				}
 				for ( name in shim ) {
@@ -352,7 +371,6 @@ module.exports = function(grunt) {
 							}else{
 								report.unresolved.push ( ext );
 							}
-
 						}
 					}
 				}
@@ -433,8 +451,9 @@ module.exports = function(grunt) {
 
 			var minify = {
 				ignore: [],
+				copy: [],
 				list: []
-			};
+				}, p,filename, d = [], e = [];
 
 
 
@@ -443,18 +462,45 @@ module.exports = function(grunt) {
 			if (options.minify.hasOwnProperty("ignore")) {
 				minify.ignore = options.minify.ignore;
 			}
+			// Check if ignore is set, if not set it
+			//if (options.minify.hasOwnProperty("ignore")) {
+
+			// Override paths with minified files
+			var t = options.minify.config.paths;
+			for (name in t) {
+				paths[name] = t[name];
+			}
+			//}
 
 			for (i = 0; i < classList.length; i++) {
 				for (name in paths) {
 					if (name === classList[i]) {
-						file = formatFileName(paths[name]);
+						p = paths[name];
+						file = formatFileName(p);
 
 					//	grunt.log.writeln('File: '+paths[name]);
 
 						// Check if file entry starts with slash, if so it is an external loaded file
-						if (paths[name].indexOf("/") > 0) {
+						if (p.indexOf("/") > 0) {
 							if (minify.ignore.indexOf(name) === -1) {
-								minify.list.push( {name:name,path:paths[name]});
+
+
+
+								if ( options.minify.config.paths.hasOwnProperty(name) && p.indexOf("bower") !== -1) {
+									filename = p.split("/").splice(-1).join("/");
+									copyFile( p , options.minify.outDir +"/"+ filename );
+									p = formatFileName( options.minify.outDir +"/"+ filename );
+
+									d.push('"' + name + '"');
+									e.push(name);
+
+									minify.copy.push({name: name, path: p});
+								}else {
+
+									minify.list.push({name: name, path: p});
+								}
+
+
 							} else {
 								report.minify.push(name);
 							}
@@ -491,7 +537,7 @@ module.exports = function(grunt) {
 
 		//	json_amd          = JSON.stringify( amd    , null, '\t');
 
-			var d = [], e = [];
+
 			for ( name in paths ) {
 
 
@@ -500,17 +546,20 @@ module.exports = function(grunt) {
 					e.push(name);
 				}
 
-				if (paths[name].indexOf("/") > 0) {
+				if (paths[name].indexOf("/") > 0  ) {
 					//paths[name] = formatFileName(paths[name]);
 					delete paths[name];
-			//	}else{
 
 				}
 				//}
 			}
 
+			for ( i = 0 ; i < minify.copy.length ; i ++ ) {
+				paths[minify.copy[i].name] = minify.copy[i].path;
+			}
+
 			if (options.minify.hasOwnProperty('app')) {
-				paths.App = formatFileName ( options.minify.app );
+				paths.App = formatFileName ( options.minify.outDir +"/"+options.minify.app );
 			}else{
 				grunt.log.writeln("No minified app found");
 			}
@@ -548,7 +597,7 @@ module.exports = function(grunt) {
 			grunt.log.writeln("App created");
 
 			//json_files   = JSON.stringify( minify.list ,null, '\t' );
-			writeFile( options.minify.app , app );
+			writeFile( options.minify.outDir +"/"+options.minify.app , app );
 
 			minify.conf = {
 				paths: paths,
@@ -567,7 +616,7 @@ module.exports = function(grunt) {
 				json_classes = JSON.stringify(json_classes, null, '\t');
 				json_conf    = JSON.stringify(minify.conf, null, '\t');
 
-				writeFile(options.minify.output, createRequireSetup( options.minify.hasOwnProperty('debug') ) );
+				writeFile( options.minify.outDir +"/"+options.minify.output, createRequireSetup( options.minify.hasOwnProperty('debug') ) );
 			}else{
 				grunt.log.writeln("No minified require setup written");
 			}

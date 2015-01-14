@@ -161,8 +161,9 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 
 ## Release History
 
-- 7 November 2014, version 0.0.1: check in of the task
-- 7 November 2014, version 0.0.2: small tweaks for npm publishing
-- 7 November 2014, version 0.0.3: a task cannot have a dash in it!
+-  7 November 2014, version 0.0.1: check in of the task
+-  7 November 2014, version 0.0.2: small tweaks for npm publishing
+-  7 November 2014, version 0.0.3: a task cannot have a dash in it!
 - 16 December 2014, version 0.0.7: Added special export for minified version
-- 5 January 2015, version 0.0.9: Fully AMD support (testing)
+-  5 January  2015, version 0.0.9: Fully AMD support (testing)
+- 15 January  2015, version 0.0.10: Testing minified version with AMD
