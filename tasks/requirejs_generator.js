@@ -207,10 +207,13 @@ module.exports = function(grunt) {
 			 *
 			 */
 			createRequireSetup = function(){
-				var app = []
+				var app = [];
 					app.push("/*! Generated with grunt-requirejs-generator @ "+date+" */\n\n");
 					app.push("define('"+options.main+"',function(){");
-					app.push("	requirejs.config( "+json_conf+" );");
+					app.push(" var c = "+json_conf+",");
+					app.push("     f = Object.keys( c.shim );");
+					app.push("	requirejs.config( c );");
+					app.push("	require( f );");
 					app.push("});");
 				return app.join("\n");
 			},
@@ -441,7 +444,7 @@ module.exports = function(grunt) {
 		writeFile( options.build_dir + "/classes.json",      json_classes );
 
 
-		if ( options.hasOwnProperty("minify") ) {
+		if ( options.hasOwnProperty("minify") && ( options.minify.hasOwnProperty("enabled") && options.minify.enabled ) ) {
 
 
 			/**
@@ -492,7 +495,7 @@ module.exports = function(grunt) {
 									p = formatFileName( options.minify.outDir +"/"+ filename );
 
 									d.push('"' + name + '"');
-									e.push(name);
+									e.push( name.replace("-","") );
 
 									minify.copy.push({name: name, path: p});
 								}else {
@@ -543,7 +546,7 @@ module.exports = function(grunt) {
 
 				if ( paths[name].indexOf("/") === 0 ) {
 					d.push('"' + name + '"');
-					e.push(name);
+					e.push( name.replace("-","") );
 				}
 
 				if (paths[name].indexOf("/") > 0  ) {
