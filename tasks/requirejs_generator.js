@@ -210,8 +210,8 @@ module.exports = function(grunt) {
 				var app = [];
 					app.push("/*! Generated with grunt-requirejs-generator @ "+date+" */\n\n");
 					app.push("define('"+options.main+"',function(){");
-					app.push(" var c = "+json_conf+",");
-					app.push("     f = Object.keys( c.shim );");
+					app.push("	var c = "+json_conf+",");
+					app.push("		f = Object.keys( c.shim );");
 					app.push("	requirejs.config( c );");
 					app.push("	require( f );");
 					app.push("});");
@@ -487,17 +487,12 @@ module.exports = function(grunt) {
 						if (p.indexOf("/") > 0) {
 							if (minify.ignore.indexOf(name) === -1) {
 
-
-
 								if ( options.minify.config.paths.hasOwnProperty(name) && p.indexOf("bower") !== -1) {
 									filename = p.split("/").splice(-1).join("/");
-									copyFile( p , options.minify.outDir +"/"+ filename );
+									//copyFile( p , options.minify.outDir +"/"+ filename );
 									p = formatFileName( options.minify.outDir +"/"+ filename );
 
-									d.push('"' + name + '"');
-									e.push( name.replace("-","") );
-
-									minify.copy.push({name: name, path: p});
+									minify.copy.push({name: name, path: options.minify.config.paths[name]});
 								}else {
 
 									minify.list.push({name: name, path: p});
@@ -514,55 +509,74 @@ module.exports = function(grunt) {
 
 
 
-
+			var external = {};
 			// Read the require config for third party files
 			if ( options.minify.hasOwnProperty("config") ) {
 				if ( options.minify.config.hasOwnProperty("shim") ) {
 					shim = options.minify.config.shim;
 				}else{
-					grunt.log.writeln("	>> Shim not defined");
+					grunt.log.writeln("	>> minify.shim not defined");
+				}
+				if ( options.minify.config.hasOwnProperty("external") ) {
+					external = options.minify.config.external;
+				}else{
+					grunt.log.writeln("	>> minify.external not defined");
 				}
 				if ( options.minify.config.hasOwnProperty("paths") ) {
 					paths = options.minify.config.paths;
 				}else{
-					grunt.log.writeln("	>> Paths not defined");
+					grunt.log.writeln("	>> minify.paths not defined");
 				}
-/*				if ( options.minify.config.hasOwnProperty("amd") ) {
-					amd = options.minify.config.amd;
-				}else{
-					grunt.log.writeln("	>> AMD not defined");
-				}*/
 			}else{
 				grunt.log.writeln("No third party setup found");
 			}
 
 
+			var copy = [],f;
+			for (i = 0; i < minify.copy.length; i++) {
+				name = minify.copy[i].name;
 
-		//	json_amd          = JSON.stringify( amd    , null, '\t');
+				if ( external.indexOf( name ) === -1 ) {
+					copy.push ( minify.copy[i] );
+				}else{
+					console.log( "external",name );
 
+					p = paths[name];
+
+					filename = p.split("/").splice(-1).join("/");
+
+					f = options.minify.outDir +"/"+ filename;
+
+					copyFile( p , f );
+					//copyFile( p , options.minify.outDir +"/"+ filename );
+					f = formatFileName( f );
+
+					if ( !shim.hasOwnProperty(name)) {
+						shim[name]  = {};
+					}
+					paths[name] = f;
+
+				}
+			}
+			minify.copy = copy;
 
 			for ( name in paths ) {
-
-
-				if ( paths[name].indexOf("/") === 0 ) {
-					d.push('"' + name + '"');
-					e.push( name.replace("-","") );
+				if ( external.indexOf( name ) === -1 ) {
+					if (paths[name].indexOf("/") === 0) {
+						d.push('"' + name + '"');
+						e.push(name.replace("-", ""));
+					}
+					if (paths[name].indexOf("/") > 0) {
+						//paths[name] = formatFileName(paths[name]);
+						delete paths[name];
+					}
 				}
-
-				if (paths[name].indexOf("/") > 0  ) {
-					//paths[name] = formatFileName(paths[name]);
-					delete paths[name];
-
-				}
-				//}
 			}
 
-			for ( i = 0 ; i < minify.copy.length ; i ++ ) {
-				paths[minify.copy[i].name] = minify.copy[i].path;
-			}
+
 
 			if (options.minify.hasOwnProperty('app')) {
-				paths.App = formatFileName ( options.minify.outDir +"/"+options.minify.app );
+				paths.Application = formatFileName ( options.minify.outDir +"/"+options.minify.app );
 			}else{
 				grunt.log.writeln("No minified app found");
 			}
@@ -571,28 +585,24 @@ module.exports = function(grunt) {
 
 			var c = '';
 			var app  = '';
-			app += 'define("App", ['+ d.join(', ') +'],function( '+ e.join(',') +' ){\n';
-			app += "/* \n";
+
+
+			app += 'define("App", [],function(){\n';
+			for ( i = 0 ; i < minify.copy.length ; i ++ ) {
+				app += "\n\t/***************** "+minify.copy[i].name+" *****************/\n";
+				app += "\t"+fs.readFileSync( minify.copy[i].path,{encoding:"utf8"}).replace(/\n/g,"\n\t")+";\n\n";
+			}
+			/*app += "*//* \n";
 			for ( i = 0 ; i < minify.list.length ; i++ ) {
 				app += "\t - "+minify.list[i].path+"\n";
 			}
-			app += "*/\n";
+			app += "*//*\n";*/
 			for ( i = 0 ; i < minify.list.length ; i++ ) {
 				name =  minify.list[i].name;
-				c = fs.readFileSync( minify.list[i].path ,{encoding:"utf8"});
 
-
-				//app += 'console.log( "' + name + '" ); \n';
-
-				/*var d = shim.hasOwnProperty(name) && shim[name].hasOwnProperty('exports');
-				if ( d ) {
-					app += 'define( "' + name + '", function(){\n';
-				}*/
-				app += c+"\n";
-				/*if ( d ) {
-					app += '});\n';
-					delete shim[name];
-				}*/
+				app += "\n\t/***************** "+minify.list[i].name+" *****************/\n";
+				c = fs.readFileSync( minify.list[i].path ,{encoding:"utf8"}).replace(/\n/g,"\n\t");
+				app += "\t"+c+"\n\n";
 			}
 			app += '});\n';
 
