@@ -509,7 +509,7 @@ module.exports = function(grunt) {
 
 
 
-			var external = {};
+			var external = [];
 			// Read the require config for third party files
 			if ( options.minify.hasOwnProperty("config") ) {
 				if ( options.minify.config.hasOwnProperty("shim") ) {
