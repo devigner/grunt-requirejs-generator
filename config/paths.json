@@ -17,12 +17,7 @@
     "Handlebars": {
       "deps": [
         "jQuery"
-      ],
-      "exports":"Handlebars"
+      ]
     }
-  },
-  "amd": [
-    "raphael",
-    "Handlebars"
-  ]
+  }
 }

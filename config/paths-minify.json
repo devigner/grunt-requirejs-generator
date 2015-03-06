@@ -9,8 +9,7 @@
     "Handlebars": {
       "deps": [
         "jQuery"
-      ],
-      "exports":"Handlebars"
+      ]
     },
     "App": {
       "deps": [
@@ -18,8 +17,5 @@
         "Handlebars"
       ]
     }
-  },
-  "amd": [
-    "Handlebars"
-  ]
+  }
 }
