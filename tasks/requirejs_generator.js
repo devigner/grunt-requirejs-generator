@@ -1,11 +1,11 @@
 /*
  * grunt-requirejs-generator
- * https://github.com/blueberry-media/grunt-requirejs-generator
+ * https://github.com/devigner/grunt-requirejs-generator
  *
- * Copyright (c) 2014 BlueBerry Media
+ * Copyright (c) 2015 Devigner
  * Licensed under the MIT license.
  * 
- * @author Martijn van Beek <martijn@blueberry.nl>
+ * @author Martijn van Beek <martijn.vanbeek@gmail.com>
  */
 
 
@@ -228,11 +228,6 @@ module.exports = function(grunt) {
 			 */
 			createUMLDependencies = function ( target , depth , write ) {
 				var name, i,d = false,tabs;
-
-
-
-
-
 				if ( write ) {
 					tabs = '\t'.repeat(depth);
 					//grunt.log.writeln("Target", tabs+target );
@@ -290,6 +285,9 @@ module.exports = function(grunt) {
 
 		// Read the require config for third party files
 		if ( options.hasOwnProperty("config") ) {
+			if ( !options.config instanceof Object ) {
+				options.config = readFile( options.config );
+			}
 			if ( options.config.hasOwnProperty("shim") ) {
 				//shim = options.config.shim;
 			}else{
@@ -389,9 +387,6 @@ module.exports = function(grunt) {
 		if ( options.hasOwnProperty("application") ) {
 			application = options.application;
 			uml = '@found "'+application+'.js", ->\n';
-	//	}
-
-	//	if ( application !== '' ) {
 			classList = [];
 			for (name in options.config.paths) {
 				classList.push( name );
@@ -459,8 +454,6 @@ module.exports = function(grunt) {
 				}, p,filename, d = [], e = [];
 
 
-
-
 			// Check if ignore is set, if not set it
 			if (options.minify.hasOwnProperty("ignore")) {
 				minify.ignore = options.minify.ignore;
@@ -469,6 +462,11 @@ module.exports = function(grunt) {
 			//if (options.minify.hasOwnProperty("ignore")) {
 
 			// Override paths with minified files
+
+			if ( !options.minify.config instanceof Object ) {
+				options.minify.config = readFile( options.minify.config );
+			}
+
 			var t = options.minify.config.paths;
 			for (name in t) {
 				paths[name] = t[name];

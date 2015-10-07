@@ -2,15 +2,15 @@
 	"name": "grunt-requirejs-generator",
 	"description": "Grunt requirejs config generator",
 	"version": "0.1.0",
-	"homepage": "https://github.com/blueberry-media/grunt-requirejs-generator",
+	"homepage": "https://github.com/devigner/grunt-requirejs-generator",
 	"author": {
 		"name": "Martijn van Beek",
-		"email": "martijn@blueberry.nl",
-		"url": "https://github.com/blueberry-media"
+		"email": "martijn.vanbeek@gmail.com",
+		"url": "https://github.com/devigner"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git@github.com:blueberry-media/grunt-requirejs-generator.git"
+		"url": "git@github.com:devigner/grunt-requirejs-generator.git"
 	},
 	"bugs": {
 		"url": ""
@@ -18,7 +18,7 @@
 	"licenses": [
 		{
 			"type": "MIT",
-			"url": "https://github.com/blueberry-media/grunt-requirejs-generator/blob/master/LICENSE-MIT"
+			"url": "https://github.com/devigner/grunt-requirejs-generator/blob/master/LICENSE-MIT"
 		}
 	],
 	"engines": {

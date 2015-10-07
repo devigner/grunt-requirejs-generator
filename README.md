@@ -24,9 +24,9 @@ The plugin depends on YUIDoc, therefor you need to load that as well
 
 	/**
 	 *
-	 * @author    Martijn van Beek <martijn@blueberry.nl>
+	 * @author    Martijn van Beek <martijn.vanbeek@gmail.com>
 	 * @since     16 June 2014
-	 * @namespace nl.blueberry
+	 * @namespace dv.package
 	 * @class     ClassNameExtended
 	 * @extends   ClassName
 	 * @uses      jQuery
@@ -48,7 +48,7 @@ grunt.initConfig({
 				yuidoc_dir:  'build/apidocs',
 				build_dir:   'build',
 				debug:       true,
-				config:      grunt.file.readJSON("config/requirejs/paths.json"),
+				config:      'config/requirejs/paths.json',
 				output:      'html/assets/js/source/<%= pkg.main %>.js',
 				main:        '<%= pkg.main %>',
 				application: '<%= pkg.requirejs_generator.application %>',
@@ -61,7 +61,7 @@ grunt.initConfig({
 				jshint: '<%= pkg.requirejs_generator.jshint %>',
 				minify:{
 					enabled:true,
-					config:  grunt.file.readJSON("config/requirejs/paths-minify.json"),
+					config: 'config/requirejs/paths-minify.json',
 					outDir: 'html/assets/js/min',
 					output: '<%= pkg.main %>.js',
 					app:    'App-<%= pkg.main %>.js'
@@ -285,10 +285,11 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 
 ## Release History
 
--  7 November 2014, version 0.0.1: check in of the task
--  7 November 2014, version 0.0.2: small tweaks for npm publishing
--  7 November 2014, version 0.0.3: a task cannot have a dash in it!
-- 16 December 2014, version 0.0.7: Added special export for minified version
--  5 January  2015, version 0.0.9: Fully AMD support (testing)
-- 15 January  2015, version 0.0.10: Testing minified version with AMD
--  6 March    2015, version 0.1.0: Documented the lastest version
+-  7 November  2014, version 0.0.1: check in of the task
+-  7 November  2014, version 0.0.2: small tweaks for npm publishing
+-  7 November  2014, version 0.0.3: a task cannot have a dash in it!
+- 16 December  2014, version 0.0.7: Added special export for minified version
+-  5 January   2015, version 0.0.9: Fully AMD support (testing)
+- 15 January   2015, version 0.0.10: Testing minified version with AMD
+-  6 March     2015, version 0.1.0: Documented the lastest version
+- 22 September 2015, version 0.1.1: Owner change (I left BlueBerry).
