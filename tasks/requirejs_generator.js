@@ -11,13 +11,20 @@
 
 'use strict';
 
-var fs = require ('fs');
+var fs = require ('fs'),
+	Options = require('./Options.js')
+;
 
 module.exports = function(grunt) {
 
 	grunt.registerMultiTask('requirejs_generator', 'Grunt requirejs config generator', function() {
 
 		var
+		// Merge task-specific and/or target-specific options with these defaults.
+			options = new Options( this.options({
+				punctuation: '.',
+				separator: ', '
+			}));
 			starttime       = Date.now(),
 			date            = new Date(),
 			watch           = ['extends','requires'],
@@ -56,11 +63,7 @@ module.exports = function(grunt) {
 			json_files,
 
 
-			// Merge task-specific and/or target-specific options with these defaults.
-			options = this.options({
-				punctuation: '.',
-				separator: ', '
-			}),
+			
 
 			/**
 			 * @method readFile
@@ -102,13 +105,13 @@ module.exports = function(grunt) {
 			 * @returns {String}
 			 */
 			formatFileName = function( path ) {
-				if (options.hasOwnProperty('remove') ) {
-					path = path.replace( options.remove , '' );
+				if (options.has('remove') ) {
+					path = path.replace( options.get('remove') , '' );
 				}
-				if ( options.hasOwnProperty('replace') && options.replace.hasOwnProperty('that') && options.replace.hasOwnProperty('with') ) {
-					path = path.replace( options.replace.that , options.replace.with );
+				if ( options.has('replace.that') && options.get('replace.that') && options.get('replace.with') ) {
+					path = path.replace( options.get('replace.that') , options.get('replace.with') );
 				}
-				/*if ( options.hasOwnProperty('replace') && options.replace.hasOwnProperty('prefix') ) {
+				/*if ( options.has('replace') && options.replace.hasOwnProperty('prefix') ) {
 					path = options.replace.prefix+path;
 				}*/
 				return path;
@@ -120,9 +123,9 @@ module.exports = function(grunt) {
 			 * @returns {boolean}
 			 */
 			shouldIgnore = function( file ) {
-				var i, len = options.ignore.length;
+				var i, ignore = options.get('ignore'), len = ignore.length;
 				for ( i = 0 ; i < len ; i++ ) {
-					if ( file.indexOf( options.ignore[i] ) !== -1 ) {
+					if ( file.indexOf( ignore[i] ) !== -1 ) {
 						return true;
 					}
 				}
@@ -209,7 +212,7 @@ module.exports = function(grunt) {
 			createRequireSetup = function(){
 				var app = [];
 					app.push("/*! Generated with grunt-requirejs-generator @ "+date+" */\n\n");
-					app.push("define('"+options.main+"',function(){");
+					app.push("define('"+options.get('main')+"',function(){");
 					app.push("	var c = "+json_conf+",");
 					app.push("		f = Object.keys( c.shim );");
 					app.push("	requirejs.config( c );");
@@ -259,12 +262,12 @@ module.exports = function(grunt) {
 			return new Array( num + 1 ).join( this );
 		};
 
-		if ( !options.hasOwnProperty('build_dir')) {
-			options.build_dir = "build";
+		if ( !options.has('build_dir')) {
+			options.set('build_dir','build');
 		}
 
-		if ( !options.hasOwnProperty('yuidoc_dir')) {
-			options.build_dir = options.build_dir+"/apidocs";
+		if ( !options.has('yuidoc_dir')) {
+			options.set('yuidoc_dir', options.get('build_dir')+"/apidocs");
 		}
 
 		// Check if yuidoc directory exists
@@ -277,14 +280,12 @@ module.exports = function(grunt) {
 		}
 
 		// Check if ignore is set, if not set it
-		if ( !options.hasOwnProperty("ignore") ) {
+		if ( !options.has("ignore") ) {
 			options.ignore = [];
 		}
 
-
-
 		// Read the require config for third party files
-		if ( options.hasOwnProperty("config") ) {
+		if ( options.has("config") ) {
 			if ( !options.config instanceof Object ) {
 				options.config = readFile( options.config );
 			}
@@ -384,7 +385,7 @@ module.exports = function(grunt) {
 
 		// If application is defined a uml diagram is generated and the classList is filled with all classes used
 		var application = '';
-		if ( options.hasOwnProperty("application") ) {
+		if ( options.has("application") ) {
 			application = options.application;
 			uml = '@found "'+application+'.js", ->\n';
 			classList = [];
@@ -399,7 +400,7 @@ module.exports = function(grunt) {
 
 		createStartFileList ();
 
-		if ( options.hasOwnProperty("config") ) {
+		if ( options.has("config") ) {
 			if (options.config.hasOwnProperty("shim")) {
 				shim = options.config.shim;
 			}
@@ -433,13 +434,13 @@ module.exports = function(grunt) {
 		json_classes      = JSON.stringify( classList  , null, '\t');
 //		json_amd          = JSON.stringify( amd    ,     null, '\t');
 
-		writeFile( options.output , createRequireSetup( options.hasOwnProperty('debug') ) );
+		writeFile( options.output , createRequireSetup( options.has('debug') ) );
 
 //		writeFile( options.build_dir + "/amd.json",          json_amd );
 		writeFile( options.build_dir + "/classes.json",      json_classes );
 
 
-		if ( options.hasOwnProperty("minify") && ( options.minify.hasOwnProperty("enabled") && options.minify.enabled ) ) {
+		if ( options.has("minify") && ( options.minify.hasOwnProperty("enabled") && options.minify.enabled ) ) {
 
 
 			/**
@@ -637,7 +638,7 @@ module.exports = function(grunt) {
 
 
 
-		if ( fs.existsSync('.jshintrc') && options.hasOwnProperty("jshint") ) {
+		if ( fs.existsSync('.jshintrc') && options.has("jshint") ) {
 			jshint = readFile('.jshintrc');
 			for ( i = 0 ; i < options.jshint.length; i++) {
 				if ( classList.indexOf( options.jshint[i] ) === -1 ) {

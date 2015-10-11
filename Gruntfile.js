@@ -1,8 +1,8 @@
 /*
  * grunt-requirejs-config
- * http://gitlab.bluedevelop.nl/blueberry/grunt-plugin-generate-requirejs
+ * http://gitlab.bluedevelop.nl/devigner/grunt-plugin-generate-requirejs
  *
- * Copyright (c) 2014 Martijn van Beek
+ * Copyright (c) 2014 Martijn van Beek <martijn.vanbeek@gmail.com>
  * Licensed under the MIT license.
  */
 
@@ -20,7 +20,7 @@ module.exports = function(grunt) {
           yuidoc_dir:'build/apidocs',
           build_dir: 'build',
           debug:     true,
-          config:    grunt.file.readJSON("config/paths.json"),
+          config:    'config/paths.json',
           output:    'html/assets/js/source/<%= pkg.main %>.js',
           replace:{
             that:'html/assets/',
@@ -33,7 +33,7 @@ module.exports = function(grunt) {
 
           ],
           minify:{
-            config:  grunt.file.readJSON("config/paths-minify.json"),
+            config: 'config/paths-minify.json',
             output: 'html/assets/js/min/<%= pkg.main %>.js',
             app:    'html/assets/js/min/App-<%= pkg.main %>.js',
             ignore:[
@@ -45,20 +45,10 @@ module.exports = function(grunt) {
     }
   });
 
-  // Actually load this plugin's task(s).
-  grunt.loadTasks('tasks');
-
   // These plugins provide necessary tasks.
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-nodeunit');
-  grunt.loadNpmTasks('grunt-requirejs-config');
-
-  // Whenever the "test" task is run, first clean the "tmp" dir, then run this
-  // plugin's task(s), then test the result.
-  grunt.registerTask('test', ['clean', 'requirejs_generator', 'nodeunit']);
+  grunt.loadNpmTasks('grunt-requirejs-generator');
 
   // By default, lint and run all tests.
-  grunt.registerTask('default', ['jshint', 'test']);
+  grunt.registerTask('default', ['requirejs_generator']);
 
 };
