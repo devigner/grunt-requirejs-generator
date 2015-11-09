@@ -46,6 +46,7 @@ module.exports = function(grunt) {
   });
 
   // These plugins provide necessary tasks.
+  grunt.loadNpmTasks('grunt-yuidoc');
   grunt.loadNpmTasks('grunt-requirejs-generator');
 
   // By default, lint and run all tests.
